@@ -1,0 +1,18 @@
+# Company configurations for data sources
+companies:
+  - name: Walmart
+    youtube_channels:
+      - UCX0-FP8iPvFwIHLG2NNfNVg
+    rss_feed: https://corporate.walmart.com/newsroom/rss
+    keywords:
+      - retail
+      - grocery
+      - earnings
+  - name: PepsiCo
+    youtube_channels:
+      - UCk3f5LKLrHRr5lzh4mW_mqw
+    rss_feed: https://www.pepsico.com/news/rss
+    keywords:
+      - CPG
+      - beverage
+      - earnings

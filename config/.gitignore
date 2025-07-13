@@ -1,0 +1,7 @@
+.env*
+config/.env
+drafts/
+logs/
+__pycache__/
+*.pyc
+venv/

@@ -1,0 +1,20 @@
+```yaml
+# RetailXAI scheduling configuration
+tasks:
+  - name: daily_earnings_scan
+    type: daily
+    time: "07:00"
+    enabled: true
+    description: "Daily scan for earnings calls and press releases, followed by analysis and publishing"
+  - name: weekly_summary
+    type: weekly
+    day: monday
+    time: "08:00"
+    enabled: false
+    description: "Weekly summary of retail trends and insights"
+  - name: quota_check
+    type: daily
+    time: "23:00"
+    enabled: true
+    description: "Check and reset YouTube API quota usage"
+```
