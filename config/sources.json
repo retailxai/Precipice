@@ -1,0 +1,26 @@
+[
+    {
+        "source_id": "walmart_youtube_1",
+        "entity_id": "walmart",
+        "source_type": "youtube",
+        "details": {"channel_id": "UC7Kx9b8PDw7E_8wS7OsExmA"}
+    },
+    {
+        "source_id": "walmart_rss_1",
+        "entity_id": "walmart",
+        "source_type": "rss",
+        "details": {"url": "https://corporate.walmart.com/newsroom/rss"}
+    },
+    {
+        "source_id": "kroger_youtube_1",
+        "entity_id": "kroger",
+        "source_type": "youtube",
+        "details": {"channel_id": "UCc4hTwC05mD4kVbw7Zr6Few"}
+    },
+    {
+        "source_id": "costco_rss_1",
+        "entity_id": "costco",
+        "source_type": "rss",
+        "details": {"url": "https://investor.costco.com/news/rss"}
+    }
+]

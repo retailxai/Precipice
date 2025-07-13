@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "destination_id": {"type": "string", "minLength": 1, "maxLength": 50},
+            "entity_id": {"type": "string", "minLength": 1, "maxLength": 50},
+            "destination_type": {
+                "type": "string",
+                "enum": ["substack", "twitter", "json_file", "sqlite", "slack"]
+            },
+            "details": {"type": "object"}
+        },
+        "required": ["destination_id", "entity_id", "destination_type", "details"],
+        "additionalProperties": false
+    }
+}

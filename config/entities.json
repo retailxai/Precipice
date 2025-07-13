@@ -1,0 +1,20 @@
+[
+    {
+        "id": "walmart",
+        "type": "company",
+        "name": "Walmart",
+        "attributes": {"ticker": "WMT"}
+    },
+    {
+        "id": "kroger",
+        "type": "company",
+        "name": "Kroger",
+        "attributes": {"ticker": "KR"}
+    },
+    {
+        "id": "costco",
+        "type": "company",
+        "name": "Costco",
+        "attributes": {"ticker": "COST"}
+    }
+]

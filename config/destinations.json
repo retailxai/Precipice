@@ -1,0 +1,20 @@
+[
+    {
+        "destination_id": "walmart_substack",
+        "entity_id": "walmart",
+        "destination_type": "substack",
+        "details": {"email": "walmart@substack.com"}
+    },
+    {
+        "destination_id": "kroger_substack",
+        "entity_id": "kroger",
+        "destination_type": "substack",
+        "details": {"email": "kroger@substack.com"}
+    },
+    {
+        "destination_id": "costco_twitter",
+        "entity_id": "costco",
+        "destination_type": "twitter",
+        "details": {"handle": "@Costco"}
+    }
+]
