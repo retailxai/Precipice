@@ -1,0 +1,172 @@
+# RetailXAI Agent Configuration
+# This file defines the configuration for all available agents
+
+agents:
+  # Data Collection Agents
+  linkedin_collector:
+    enabled: false  # Requires LinkedIn API credentials
+    interval_minutes: 360  # Run every 6 hours
+    max_retries: 3
+    timeout_seconds: 60
+    config:
+      api_key: ${LINKEDIN_API_KEY}
+      
+  news_api_collector:
+    enabled: false  # Requires News API key
+    interval_minutes: 180  # Run every 3 hours
+    max_retries: 3
+    timeout_seconds: 45
+    config:
+      api_key: ${NEWS_API_KEY}
+      
+  reddit_collector:
+    enabled: false  # Requires Reddit API credentials
+    interval_minutes: 240  # Run every 4 hours
+    max_retries: 3
+    timeout_seconds: 30
+    config:
+      client_id: ${REDDIT_CLIENT_ID}
+      client_secret: ${REDDIT_CLIENT_SECRET}
+      user_agent: "RetailXAI:1.0 (by /u/retailxai)"
+      subreddits:
+        - investing
+        - stocks
+        - business
+        - retailinvestor
+        - SecurityAnalysis
+        
+  earnings_collector:
+    enabled: true  # Can work without API keys
+    interval_minutes: 720  # Run every 12 hours
+    max_retries: 3
+    timeout_seconds: 60
+    config:
+      sec_api_key: ${SEC_API_KEY}  # Optional
+      earnings_sources:
+        - "https://www.sec.gov/cgi-bin/browse-edgar"
+        - "https://seekingalpha.com/earnings"
+
+  # Processing Agents
+  sentiment_analyzer:
+    enabled: true
+    interval_minutes: null  # Triggered by data collection
+    max_retries: 2
+    timeout_seconds: 30
+    config:
+      use_claude: false  # Set to true to use Claude for sentiment analysis
+      claude_api_key: ${CLAUDE_API_KEY}
+      
+  competitor_analyzer:
+    enabled: true
+    interval_minutes: null  # Triggered by data collection
+    max_retries: 2
+    timeout_seconds: 45
+    config:
+      competitor_mapping:
+        "Walmart": ["Target", "Amazon", "Costco"]
+        "Target": ["Walmart", "Amazon", "Best Buy"]
+        "Starbucks": ["Dunkin'", "McDonald's", "Costa Coffee"]
+        
+  trend_analyzer:
+    enabled: true
+    interval_minutes: null  # Triggered by data collection
+    max_retries: 2
+    timeout_seconds: 30
+    config:
+      trend_keywords:
+        technology:
+          - AI
+          - artificial intelligence
+          - automation
+          - digital transformation
+          - e-commerce
+          - online sales
+          - mobile app
+          - digital payments
+        sustainability:
+          - sustainable
+          - green
+          - environment
+          - carbon neutral
+          - ESG
+          - renewable energy
+          - eco-friendly
+        consumer_behavior:
+          - consumer preferences
+          - shopping behavior
+          - customer experience
+          - personalization
+          - omnichannel
+          - loyalty programs
+        supply_chain:
+          - supply chain
+          - logistics
+          - inventory management
+          - shipping
+          - distribution
+          - fulfillment
+        financial:
+          - revenue growth
+          - profit margins
+          - cost reduction
+          - investment
+          - expansion
+          - market share
+
+  # Publishing Agents
+  linkedin_publisher:
+    enabled: false  # Requires LinkedIn credentials
+    interval_minutes: null  # Triggered by content generation
+    max_retries: 2
+    timeout_seconds: 30
+    config:
+      access_token: ${LINKEDIN_ACCESS_TOKEN}
+      company_id: ${LINKEDIN_COMPANY_ID}
+      draft_mode: true  # Set to false to publish directly
+      draft_directory: "drafts/linkedin"
+      
+  slack_notifier:
+    enabled: false  # Requires Slack credentials
+    interval_minutes: null  # Triggered by events
+    max_retries: 2
+    timeout_seconds: 15
+    config:
+      webhook_url: ${SLACK_WEBHOOK_URL}  # Either webhook_url or bot_token required
+      bot_token: ${SLACK_BOT_TOKEN}
+      channel: "#retailxai-notifications"
+      notification_types:
+        - daily_summary
+        - error_alerts
+        - trend_alerts
+
+# Agent Pipeline Configuration
+pipeline:
+  # Schedule for running the full agent pipeline
+  schedule:
+    enabled: true
+    daily_time: "07:00"
+    timezone: "UTC"
+    
+  # Pipeline execution order
+  execution_order:
+    1_data_collection:
+      - earnings_collector
+      - linkedin_collector
+      - news_api_collector
+      - reddit_collector
+    2_processing:
+      - sentiment_analyzer
+      - competitor_analyzer
+      - trend_analyzer
+    3_publishing:
+      - linkedin_publisher
+      - slack_notifier
+      
+  # Data flow configuration
+  data_flow:
+    # How long to keep data between pipeline stages (in hours)
+    data_retention_hours: 24
+    # Minimum number of transcripts needed to proceed to processing
+    min_transcripts_threshold: 1
+    # Maximum processing time per stage (in minutes)
+    max_stage_time_minutes: 30
