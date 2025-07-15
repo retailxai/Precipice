@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Welcome to my newsletter - insights, stories, and ideas delivered to your inbox.">
+    <title>Your Newsletter | Substack Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>Your Newsletter</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#posts" class="nav-link">Posts</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#subscribe" class="nav-link subscribe-btn">Subscribe</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Welcome to <span class="highlight">Your Newsletter</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Insights, stories, and ideas that matter. Join thousands of readers who get thoughtful content delivered straight to their inbox every week.
+                </p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">5,000+</span>
+                        <span class="stat-label">Subscribers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">150+</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-label">Open Rate</span>
+                    </div>
+                </div>
+                <div class="hero-cta">
+                    <button class="cta-button primary" onclick="scrollToSubscribe()">
+                        <i class="fas fa-envelope"></i>
+                        Subscribe Now
+                    </button>
+                    <button class="cta-button secondary" onclick="scrollToAbout()">
+                        Learn More
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="newsletter-preview">
+                    <div class="preview-header">
+                        <div class="preview-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    <div class="preview-content">
+                        <h3>Latest Newsletter</h3>
+                        <p>The future of technology and how it shapes our daily lives...</p>
+                        <div class="preview-meta">
+                            <span><i class="fas fa-calendar"></i> 3 days ago</span>
+                            <span><i class="fas fa-eye"></i> 1.2k views</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>About the Newsletter</h2>
+                <p>What you can expect from my weekly insights</p>
+            </div>
+            <div class="about-grid">
+                <div class="about-card">
+                    <div class="card-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3>Fresh Insights</h3>
+                    <p>Original perspectives on technology, business, and culture that you won't find anywhere else.</p>
+                </div>
+                <div class="about-card">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Data-Driven</h3>
+                    <p>Analysis backed by research and real-world data to help you make informed decisions.</p>
+                </div>
+                <div class="about-card">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Community</h3>
+                    <p>Join a growing community of like-minded readers who value thoughtful discourse.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Posts Section -->
+    <section id="posts" class="posts">
+        <div class="container">
+            <div class="section-header">
+                <h2>Recent Posts</h2>
+                <p>Latest thoughts and insights from the newsletter</p>
+            </div>
+            <div class="posts-grid">
+                <article class="post-card">
+                    <div class="post-image">
+                        <div class="post-category">Technology</div>
+                    </div>
+                    <div class="post-content">
+                        <h3>The Future of Remote Work</h3>
+                        <p>How distributed teams are reshaping the way we think about productivity and collaboration in the digital age.</p>
+                        <div class="post-meta">
+                            <span class="post-date">Dec 15, 2024</span>
+                            <span class="post-read-time">5 min read</span>
+                        </div>
+                    </div>
+                </article>
+                <article class="post-card">
+                    <div class="post-image">
+                        <div class="post-category">Business</div>
+                    </div>
+                    <div class="post-content">
+                        <h3>Building Sustainable Startups</h3>
+                        <p>Why the most successful companies focus on long-term value creation rather than short-term growth hacks.</p>
+                        <div class="post-meta">
+                            <span class="post-date">Dec 12, 2024</span>
+                            <span class="post-read-time">7 min read</span>
+                        </div>
+                    </div>
+                </article>
+                <article class="post-card">
+                    <div class="post-image">
+                        <div class="post-category">Culture</div>
+                    </div>
+                    <div class="post-content">
+                        <h3>Digital Minimalism in Practice</h3>
+                        <p>Practical strategies for reducing digital clutter and focusing on what truly matters in our connected world.</p>
+                        <div class="post-meta">
+                            <span class="post-date">Dec 8, 2024</span>
+                            <span class="post-read-time">4 min read</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            <div class="posts-cta">
+                <a href="#" class="view-all-btn">View All Posts</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Signup Section -->
+    <section id="subscribe" class="newsletter">
+        <div class="container">
+            <div class="newsletter-content">
+                <h2>Never Miss an Update</h2>
+                <p>Join thousands of readers who get thoughtful insights delivered to their inbox every week. No spam, ever.</p>
+                <form class="newsletter-form" id="subscribeForm">
+                    <div class="form-group">
+                        <input type="email" id="email" placeholder="Enter your email address" required>
+                        <button type="submit" class="submit-btn">
+                            <span>Subscribe</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <p class="form-disclaimer">
+                        <i class="fas fa-shield-alt"></i>
+                        Your email is safe with us. Unsubscribe anytime.
+                    </p>
+                </form>
+                <div class="newsletter-features">
+                    <div class="feature">
+                        <i class="fas fa-clock"></i>
+                        <span>Weekly delivery</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Mobile optimized</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-user-friends"></i>
+                        <span>5,000+ subscribers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h2>Get in Touch</h2>
+                    <p>Have a question or want to collaborate? I'd love to hear from you.</p>
+                    <div class="contact-methods">
+                        <a href="mailto:hello@yoursubstack.com" class="contact-method">
+                            <i class="fas fa-envelope"></i>
+                            <span>hello@yoursubstack.com</span>
+                        </a>
+                        <a href="https://twitter.com/yourhandle" class="contact-method">
+                            <i class="fab fa-twitter"></i>
+                            <span>@yourhandle</span>
+                        </a>
+                        <a href="https://linkedin.com/in/yourprofile" class="contact-method">
+                            <i class="fab fa-linkedin"></i>
+                            <span>LinkedIn Profile</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form id="contactForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" id="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="contactEmail">Email</label>
+                                <input type="email" id="contactEmail" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Your Newsletter</h3>
+                    <p>Thoughtful insights delivered weekly to your inbox.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#posts">Recent Posts</a></li>
+                        <li><a href="#subscribe">Subscribe</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="#">Technology</a></li>
+                        <li><a href="#">Business</a></li>
+                        <li><a href="#">Culture</a></li>
+                        <li><a href="#">Productivity</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Archive</h4>
+                    <ul>
+                        <li><a href="#">December 2024</a></li>
+                        <li><a href="#">November 2024</a></li>
+                        <li><a href="#">October 2024</a></li>
+                        <li><a href="#">View All</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Your Newsletter. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">RSS Feed</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
