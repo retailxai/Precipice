@@ -14,6 +14,7 @@ from content_manager import ContentManager
 from database_manager import DatabaseManager
 from entities import Company
 from rss_collector import RSSCollector
+from trending_collector import TrendingTopicsCollector
 from youtube_collector import YouTubeCollector
 
 logger = logging.getLogger("RetailXAI.Scheduler")
@@ -128,6 +129,12 @@ class RetailXAIScheduler:
             companies,
             self.shutdown_event,
         )
+        self.trending_collector = TrendingTopicsCollector(
+            self.config["sources"]["trending"]["reddit"],
+            self.config["sources"]["trending"]["twitter"],
+            companies,
+            self.shutdown_event,
+        )
         self.claude_processor = ClaudeProcessor(
             self.config["global"]["api_keys"]["claude"],
             self.config["global"]["claude_model"],
@@ -237,6 +244,53 @@ class RetailXAIScheduler:
         # Placeholder for future implementation
         logger.info("Weekly summary task not implemented yet")
 
+    def trending_topics_scan(self) -> None:
+        """Scan for trending retail topics and add to processing queue."""
+        if self.shutdown_event.is_set():
+            logger.info("Shutdown requested, stopping trending topics scan")
+            return
+
+        # Fetch trending topics
+        trending_transcripts = self.trending_collector.get_trending_topics()
+        
+        if not trending_transcripts:
+            logger.info("No trending topics found")
+            return
+
+        analyses = []
+        for transcript in trending_transcripts:
+            if self.shutdown_event.is_set():
+                logger.info("Shutdown requested during trending topics processing")
+                return
+                
+            # Store transcript in database
+            transcript_id = self.db_manager.insert_transcript(transcript)
+            
+            # Analyze trending topic
+            analysis = self.claude_processor.analyze_transcript(transcript.content, transcript.company)
+            if not analysis.error:
+                self.db_manager.insert_analysis(analysis, transcript_id)
+                analyses.append(analysis)
+
+        # Generate content if we have enough interesting topics
+        if len(analyses) >= 3:
+            article = self.claude_processor.generate_article(
+                analyses, 
+                "Trending Retail Topics: What's Buzzing in the Industry"
+            )
+            if not article.error:
+                article_id = self.db_manager.insert_article(article)
+                # Quality check before publishing
+                if self.content_manager.quality_check(article) >= 6:  # Lower threshold for trending topics
+                    substack_url = self.content_manager.publish_to_substack(article)
+                    tweets = self.claude_processor.create_twitter_thread(article)
+                    self.content_manager.post_to_twitter(tweets, substack_url)
+                    logger.info(f"Published trending topics article: {article.headline}")
+                else:
+                    logger.info("Trending topics article didn't meet quality threshold")
+        else:
+            logger.info(f"Only {len(analyses)} trending topics analyzed, need at least 3 for article")
+
     def quota_check(self) -> None:
         """Check and reset YouTube API quota usage."""
         if self.shutdown_event.is_set():
@@ -250,6 +304,7 @@ class RetailXAIScheduler:
         schedule.clear()
         task_functions = {
             "daily_earnings_scan": self.daily_earnings_scan,
+            "trending_topics_scan": self.trending_topics_scan,
             "weekly_summary": self.weekly_summary,
             "quota_check": self.quota_check,
         }

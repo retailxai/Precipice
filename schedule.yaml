@@ -6,6 +6,11 @@ tasks:
     time: "07:00"
     enabled: true
     description: "Daily scan for earnings calls and press releases, followed by analysis and publishing"
+  - name: trending_topics_scan
+    type: daily
+    time: "10:00"
+    enabled: true
+    description: "Scan trending retail topics from Reddit, Twitter, and Google News"
   - name: weekly_summary
     type: weekly
     day: monday

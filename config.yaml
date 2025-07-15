@@ -21,6 +21,9 @@ global:
       consumer_secret: ${TWITTER_CONSUMER_SECRET}
       access_token: ${TWITTER_ACCESS_TOKEN}
       access_token_secret: ${TWITTER_ACCESS_TOKEN_SECRET}
+    reddit:
+      client_id: ${REDDIT_CLIENT_ID}
+      client_secret: ${REDDIT_CLIENT_SECRET}
     substack:
       email_address: ${SUBSTACK_EMAIL_ADDRESS}
       email_user: ${EMAIL_USER}
@@ -42,6 +45,17 @@ sources:
     static_feeds:
       - https://www.prnewswire.com/news-releases/food-and-beverages/
       - https://www.businesswire.com/portal/site/home/news/food-beverage/
+  trending:
+    reddit:
+      client_id: ${REDDIT_CLIENT_ID}
+      client_secret: ${REDDIT_CLIENT_SECRET}
+      user_agent: "RetailXAI/1.0"
+    twitter:
+      consumer_key: ${TWITTER_CONSUMER_KEY}
+      consumer_secret: ${TWITTER_CONSUMER_SECRET}
+      access_token: ${TWITTER_ACCESS_TOKEN}
+      access_token_secret: ${TWITTER_ACCESS_TOKEN_SECRET}
+    companies: config/companies.yaml
 
 # Data destinations configuration
 destinations:
