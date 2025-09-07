@@ -223,13 +223,20 @@ class SimplePipeline:
                 )
                 
                 # Use the correct method name
-                articles = rss_collector.collect_rss_data()
+                articles = rss_collector.get_transcripts()
                 
                 # Filter articles by date
                 recent_articles = []
                 for article in articles:
                     try:
-                        article_date = datetime.fromisoformat(article['published'].replace('Z', '+00:00'))
+                        # Handle Transcript objects
+                        if hasattr(article, 'published_at'):
+                            article_date = article.published_at
+                        elif hasattr(article, 'published'):
+                            article_date = datetime.fromisoformat(article.published.replace('Z', '+00:00'))
+                        else:
+                            continue
+                            
                         if article_date >= cutoff_date:
                             recent_articles.append(article)
                     except:
@@ -240,15 +247,40 @@ class SimplePipeline:
                 # Store articles
                 for article in recent_articles:
                     try:
-                        print(f"    📝 Processing: {article['title'][:60]}...")
+                        # Handle Transcript objects
+                        if hasattr(article, 'title'):
+                            title = article.title
+                        else:
+                            title = article.get('title', 'Untitled')
+                            
+                        if hasattr(article, 'content'):
+                            content = article.content
+                        elif hasattr(article, 'summary'):
+                            content = article.summary
+                        else:
+                            content = article.get('summary', 'No content')
+                            
+                        if hasattr(article, 'source_id'):
+                            source_id = article.source_id
+                        else:
+                            source_id = article.get('id', '')
+                            
+                        if hasattr(article, 'published_at'):
+                            published = article.published_at
+                        elif hasattr(article, 'published'):
+                            published = article.published
+                        else:
+                            published = datetime.now().isoformat()
+                        
+                        print(f"    📝 Processing: {title[:60]}...")
                         
                         # Store as transcript
                         transcript_id = rss_collector.db_manager.insert_transcript(
                             company.id,
-                            article.get('id', ''),
-                            article['title'],
-                            article['summary'],
-                            article['published']
+                            source_id,
+                            title,
+                            content,
+                            published
                         )
                         
                         total_articles += 1
