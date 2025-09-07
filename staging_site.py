@@ -134,13 +134,13 @@ def get_health():
             # Get recent health checks
             cur.execute("""
                 SELECT * FROM health_checks 
-                ORDER BY created_at DESC 
+                ORDER BY timestamp DESC 
                 LIMIT 10
             """)
             health_checks = cur.fetchall()
             
             # Get agent states
-            cur.execute("SELECT * FROM agent_states ORDER BY last_execution DESC")
+            cur.execute("SELECT * FROM agent_states ORDER BY timestamp DESC")
             agent_states = cur.fetchall()
             
             return jsonify({
@@ -179,7 +179,7 @@ def get_stats():
             
             # Recent activity (last 24 hours)
             yesterday = datetime.now() - timedelta(days=1)
-            cur.execute("SELECT COUNT(*) as count FROM transcripts WHERE created_at > %s", (yesterday,))
+            cur.execute("SELECT COUNT(*) as count FROM transcripts WHERE published_at > %s", (yesterday,))
             stats['transcripts_24h'] = cur.fetchone()['count']
             
             cur.execute("SELECT COUNT(*) as count FROM analyses WHERE created_at > %s", (yesterday,))
