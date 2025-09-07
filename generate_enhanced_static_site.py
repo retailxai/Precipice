@@ -126,15 +126,48 @@ def generate_html(data):
         title = analysis.get('transcript_title', 'Analysis')
         company = analysis.get('company_name', 'Unknown Company')
         sentiment = analysis.get('metrics', {}).get('sentiment', 'N/A')
+        confidence = analysis.get('metrics', {}).get('confidence', 'N/A')
+        strategy = analysis.get('strategy', {})
+        trends = analysis.get('trends', {})
+        consumer_insights = analysis.get('consumer_insights', {})
+        tech_observations = analysis.get('tech_observations', {})
+        operations = analysis.get('operations', {})
+        outlook = analysis.get('outlook', {})
+        
+        # Format sentiment with color coding
+        sentiment_color = "#27ae60" if isinstance(sentiment, (int, float)) and sentiment > 0 else "#e74c3c" if isinstance(sentiment, (int, float)) and sentiment < 0 else "#f39c12"
+        sentiment_display = f"{sentiment:.2f}" if isinstance(sentiment, (int, float)) else str(sentiment)
+        
+        # Format outlook with emoji
+        outlook_emoji = "📈" if outlook.get('forecast') == 'bullish' else "📉" if outlook.get('forecast') == 'bearish' else "➡️"
         
         analysis_list += f"""
         <div class="item">
             <div class="item-title">{title}</div>
-            <div class="item-meta">{company}</div>
+            <div class="item-meta">{company} • Analysis ID: {analysis.get('id', 'N/A')}</div>
             <div class="item-content">
-                <strong>Sentiment:</strong> {sentiment}<br>
-                <strong>Strategy:</strong> {json.dumps(analysis.get('strategy', {}))}<br>
-                <strong>Trends:</strong> {json.dumps(analysis.get('trends', {}))}
+                <div style="margin-bottom: 10px;">
+                    <strong>Sentiment:</strong> <span style="color: {sentiment_color}; font-weight: bold;">{sentiment_display}</span> 
+                    (Confidence: {confidence})
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Strategy:</strong> {', '.join([f"{k}: {v}" for k, v in strategy.items()]) if strategy else 'N/A'}
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Trends:</strong> {', '.join([f"{k}: {v}" for k, v in trends.items()]) if trends else 'N/A'}
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Consumer Insights:</strong> {', '.join([f"{k}: {v}" for k, v in consumer_insights.items()]) if consumer_insights else 'N/A'}
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Tech Observations:</strong> {', '.join([f"{k}: {v}" for k, v in tech_observations.items()]) if tech_observations else 'N/A'}
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Operations:</strong> {', '.join([f"{k}: {v}" for k, v in operations.items()]) if operations else 'N/A'}
+                </div>
+                <div>
+                    <strong>Outlook:</strong> {outlook_emoji} {', '.join([f"{k}: {v}" for k, v in outlook.items()]) if outlook else 'N/A'}
+                </div>
             </div>
         </div>
         """
@@ -374,21 +407,21 @@ def generate_html(data):
             </div>
 
             <div class="content-card">
-                <div class="card-header">🤖 AI Analyses</div>
-                <div class="card-content">
-                    {analysis_list if analysis_list else '<div class="item">No analyses available</div>'}
-                </div>
-            </div>
-        </div>
-
-        <div class="content-grid">
-            <div class="content-card">
                 <div class="card-header">📰 Recent Articles</div>
                 <div class="card-content">
                     {article_list if article_list else '<div class="item">No articles available</div>'}
                 </div>
             </div>
+        </div>
 
+        <div class="content-card" style="margin-bottom: 40px;">
+            <div class="card-header">🤖 AI Analysis Results</div>
+            <div class="card-content" style="max-height: 600px;">
+                {analysis_list if analysis_list else '<div class="item">No analyses available</div>'}
+            </div>
+        </div>
+
+        <div class="content-grid">
             <div class="content-card">
                 <div class="card-header">🏥 System Health</div>
                 <div class="card-content">
@@ -400,6 +433,37 @@ def generate_html(data):
                         <div class="item-meta">Database: {health.get('database', 'Unknown')}</div>
                         <div class="item-content">
                             Last Updated: {health.get('timestamp', 'Unknown')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">📈 Analysis Summary</div>
+                <div class="card-content">
+                    <div class="item">
+                        <div class="item-title">Sentiment Distribution</div>
+                        <div class="item-content">
+                            <div style="margin-bottom: 10px;">
+                                <strong>Positive:</strong> {len([a for a in analyses if isinstance(a.get('metrics', {}).get('sentiment'), (int, float)) and a.get('metrics', {}).get('sentiment', 0) > 0])} analyses
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong>Neutral:</strong> {len([a for a in analyses if isinstance(a.get('metrics', {}).get('sentiment'), (int, float)) and a.get('metrics', {}).get('sentiment', 0) == 0])} analyses
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong>Negative:</strong> {len([a for a in analyses if isinstance(a.get('metrics', {}).get('sentiment'), (int, float)) and a.get('metrics', {}).get('sentiment', 0) < 0])} analyses
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="item-title">Outlook Distribution</div>
+                        <div class="item-content">
+                            <div style="margin-bottom: 10px;">
+                                <strong>📈 Bullish:</strong> {len([a for a in analyses if a.get('outlook', {}).get('forecast') == 'bullish'])} analyses
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <strong>📉 Bearish:</strong> {len([a for a in analyses if a.get('outlook', {}).get('forecast') == 'bearish'])} analyses
+                            </div>
                         </div>
                     </div>
                 </div>
