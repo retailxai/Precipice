@@ -16,3 +16,5 @@ aiohttp==3.9.1
 praw==7.7.1
 textblob==0.17.1
 psutil==5.9.8
+# Web interface dependencies
+flask==3.0.0

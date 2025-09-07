@@ -61,7 +61,7 @@ Ready for server deployment at 143.198.14.56"
 fi
 
 # Push to remote
-git push origin main
+git push origin master
 print_status "Changes pushed to remote repository"
 
 # Step 2: Connect to server and deploy
@@ -88,7 +88,7 @@ cd /home/retailxai/precipice
 # Clone or update repository
 if [ -d ".git" ]; then
     echo "📥 Updating existing repository..."
-    git pull origin main
+    git pull origin master
 else
     echo "📥 Cloning repository..."
     git clone https://github.com/your-username/Precipice-1.git .

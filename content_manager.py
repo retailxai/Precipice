@@ -105,7 +105,7 @@ class ContentManager:
 
         if self.substack_config.get("email_drafts"):
             return self._email_draft_to_inbox(article, html_filename, json_filename, timestamp)
-        return f"file://{os.path.abspath(html_filename)}"
+        return f"file://{os.path.abspath(html_filename).replace(os.sep, '/')}"
 
     def post_to_twitter(self, tweets: List[Tweet], article_url: str) -> List[str]:
         """Save Twitter thread to draft file.
@@ -130,7 +130,7 @@ class ContentManager:
         with open(draft_filename, "w", encoding="utf-8") as f:
             json.dump(tweet_data, f, indent=2, ensure_ascii=False)
         logger.info(f"Twitter thread draft saved: {draft_filename}")
-        return [f"file://{os.path.abspath(draft_filename)}"]
+        return [f"file://{os.path.abspath(draft_filename).replace(os.sep, '/')}"]
 
     def _email_draft_to_inbox(self, article: Article, html_filename: str, json_filename: str, timestamp: str) -> str:
         """Email Substack draft to recipient.
@@ -173,7 +173,7 @@ class ContentManager:
             return f"emailed-to-{self.substack_config['email_recipient']}-{timestamp}"
         except Exception as e:
             logger.error(f"Email sending failed: {e}")
-            return f"file://{os.path.abspath(html_filename)}"
+            return f"file://{os.path.abspath(html_filename).replace(os.sep, '/')}"
 
     def _format_for_email_plain(self, article: Article) -> str:
         """Format article as plain text for email.
@@ -225,7 +225,7 @@ Word count: {len(article.body.split())} words
     </div>
     <div class="content">
         <h1 class="title">{article.headline}</h1>
-        <div>{article.body.replace('\n\n', '</p><p>').replace('\n', '<br>')}</div>
+        <div>{article.body.replace(chr(10)+chr(10), '</p><p>').replace(chr(10), '<br>')}</div>
     </div>
     <div class="footer">
         <strong>Instructions:</strong>
@@ -259,7 +259,7 @@ Word count: {len(article.body.split())} words
 <body>
     <h1>{article.headline}</h1>
     <div style="font-family: Georgia, serif; line-height: 1.6; max-width: 600px;">
-        {article.body.replace('\n\n', '</p><p>').replace('\n', '<br>')}
+        {article.body.replace(chr(10)+chr(10), '</p><p>').replace(chr(10), '<br>')}
     </div>
     <hr>
     <p><em>Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</em></p>
