@@ -19,7 +19,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'database': 'retailxai',
     'user': 'retailxbt_user',
-    'password': 'Seattle2311'
+    'password': os.getenv('DATABASE_PASSWORD', 'Seattle2311')
 }
 
 def get_db_connection():

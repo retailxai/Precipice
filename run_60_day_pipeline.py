@@ -72,7 +72,7 @@ class RetailXAIPipeline:
             'host': 'localhost',
             'name': 'retailxai',
             'user': 'retailxbt_user',
-            'password': 'Seattle2311',
+            'password': os.getenv('DATABASE_PASSWORD', 'Seattle2311'),
             'min_connections': 1,
             'max_connections': 5,
             'connect_timeout': 10

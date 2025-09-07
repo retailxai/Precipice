@@ -18,7 +18,7 @@ def create_database_schema():
         host='localhost',
         database='retailxai',
         user='retailxbt_user',
-        password='Seattle2311'
+        password=os.getenv('DATABASE_PASSWORD', 'Seattle2311')
     )
     
     try:
@@ -137,7 +137,7 @@ def populate_companies():
         host='localhost',
         database='retailxai',
         user='retailxbt_user',
-        password='Seattle2311'
+        password=os.getenv('DATABASE_PASSWORD', 'Seattle2311')
     )
     
     try:
@@ -172,7 +172,7 @@ def add_sample_data():
         host='localhost',
         database='retailxai',
         user='retailxbt_user',
-        password='Seattle2311'
+        password=os.getenv('DATABASE_PASSWORD', 'Seattle2311')
     )
     
     try:
