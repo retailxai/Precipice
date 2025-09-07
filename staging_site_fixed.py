@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RetailXAI Staging Site
+RetailXAI Staging Site - Fixed for Production Database Schema
 A simple web interface to view generated content and system status.
 """
 
@@ -86,9 +86,10 @@ def get_analyses():
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                SELECT a.*, c.name as company_name 
+                SELECT a.*, c.name as company_name, t.title as transcript_title
                 FROM analyses a 
-                LEFT JOIN companies c ON a.company_id = c.id 
+                LEFT JOIN transcripts t ON a.transcript_id = t.id
+                LEFT JOIN companies c ON t.company_id = c.id 
                 ORDER BY a.created_at DESC 
                 LIMIT 50
             """)
@@ -109,9 +110,8 @@ def get_articles():
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                SELECT a.*, c.name as company_name 
+                SELECT a.*, 'Unknown Company' as company_name
                 FROM articles a 
-                LEFT JOIN companies c ON a.company_id = c.id 
                 ORDER BY a.created_at DESC 
                 LIMIT 50
             """)
@@ -179,7 +179,7 @@ def get_stats():
             
             # Recent activity (last 24 hours)
             yesterday = datetime.now() - timedelta(days=1)
-            cur.execute("SELECT COUNT(*) as count FROM transcripts WHERE created_at > %s", (yesterday,))
+            cur.execute("SELECT COUNT(*) as count FROM transcripts WHERE published_at > %s", (yesterday,))
             stats['transcripts_24h'] = cur.fetchone()['count']
             
             cur.execute("SELECT COUNT(*) as count FROM analyses WHERE created_at > %s", (yesterday,))
@@ -193,4 +193,3 @@ def get_stats():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
