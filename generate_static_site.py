@@ -27,7 +27,11 @@ def fetch_data_from_server(endpoint):
         return response.json()
     except Exception as e:
         print(f"Warning: Could not fetch {endpoint}: {e}")
-        return []
+        # Return appropriate default based on endpoint
+        if endpoint == "/api/stats":
+            return {"companies": 0, "transcripts": 0, "analyses": 0, "articles": 0}
+        else:
+            return []
 
 def generate_index_html():
     """Generate the main index.html file."""
