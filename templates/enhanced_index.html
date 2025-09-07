@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetailXAI Enhanced Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .card-content {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s ease;
+        }
+
+        .item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .item-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .item-content {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+            font-size: 1.1rem;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-healthy {
+            background-color: #27ae60;
+        }
+
+        .status-unhealthy {
+            background-color: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 RetailXAI Enhanced Dashboard</h1>
+            <p>Advanced Retail Intelligence with 7 New Data Sources</p>
+        </div>
+
+        <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="companyCount">-</div>
+                <div class="stat-label">Companies</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="transcriptCount">-</div>
+                <div class="stat-label">Transcripts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="analysisCount">-</div>
+                <div class="stat-label">Analyses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="articleCount">-</div>
+                <div class="stat-label">Articles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="recentTranscripts">-</div>
+                <div class="stat-label">Recent (7d)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="recentAnalyses">-</div>
+                <div class="stat-label">Recent (7d)</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="content-card">
+                <div class="card-header">📊 Recent Transcripts</div>
+                <div class="card-content" id="transcriptsContent">
+                    <div class="loading">Loading transcripts...</div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">🤖 AI Analyses</div>
+                <div class="card-content" id="analysesContent">
+                    <div class="loading">Loading analyses...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="content-card">
+                <div class="card-header">📰 Recent Articles</div>
+                <div class="card-content" id="articlesContent">
+                    <div class="loading">Loading articles...</div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">🏥 System Health</div>
+                <div class="card-content" id="healthContent">
+                    <div class="loading">Checking health...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                // Load stats
+                const statsResponse = await fetch('/api/stats');
+                const stats = await statsResponse.json();
+                
+                document.getElementById('companyCount').textContent = stats.companies || 0;
+                document.getElementById('transcriptCount').textContent = stats.transcripts || 0;
+                document.getElementById('analysisCount').textContent = stats.analyses || 0;
+                document.getElementById('articleCount').textContent = stats.articles || 0;
+                document.getElementById('recentTranscripts').textContent = stats.recent_transcripts || 0;
+                document.getElementById('recentAnalyses').textContent = stats.recent_analyses || 0;
+
+                // Load transcripts
+                const transcriptsResponse = await fetch('/api/transcripts');
+                const transcripts = await transcriptsResponse.json();
+                displayTranscripts(transcripts);
+
+                // Load analyses
+                const analysesResponse = await fetch('/api/analyses');
+                const analyses = await analysesResponse.json();
+                displayAnalyses(analyses);
+
+                // Load articles
+                const articlesResponse = await fetch('/api/articles');
+                const articles = await articlesResponse.json();
+                displayArticles(articles);
+
+                // Load health
+                const healthResponse = await fetch('/api/health');
+                const health = await healthResponse.json();
+                displayHealth(health);
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Failed to load data. Please try again.');
+            }
+        }
+
+        function displayTranscripts(transcripts) {
+            const container = document.getElementById('transcriptsContent');
+            
+            if (transcripts.length === 0) {
+                container.innerHTML = '<div class="loading">No transcripts available</div>';
+                return;
+            }
+
+            container.innerHTML = transcripts.map(transcript => `
+                <div class="item">
+                    <div class="item-title">${transcript.title || 'Untitled'}</div>
+                    <div class="item-meta">
+                        ${transcript.company_name || 'Unknown Company'} • 
+                        ${transcript.published_at ? new Date(transcript.published_at).toLocaleDateString() : 'Unknown Date'}
+                    </div>
+                    <div class="item-content">${transcript.content || 'No content available'}</div>
+                </div>
+            `).join('');
+        }
+
+        function displayAnalyses(analyses) {
+            const container = document.getElementById('analysesContent');
+            
+            if (analyses.length === 0) {
+                container.innerHTML = '<div class="loading">No analyses available</div>';
+                return;
+            }
+
+            container.innerHTML = analyses.map(analysis => `
+                <div class="item">
+                    <div class="item-title">${analysis.transcript_title || 'Analysis'}</div>
+                    <div class="item-meta">
+                        ${analysis.company_name || 'Unknown Company'}
+                    </div>
+                    <div class="item-content">
+                        <strong>Sentiment:</strong> ${analysis.metrics.sentiment ? analysis.metrics.sentiment.toFixed(2) : 'N/A'}<br>
+                        <strong>Strategy:</strong> ${JSON.stringify(analysis.strategy)}<br>
+                        <strong>Trends:</strong> ${JSON.stringify(analysis.trends)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayArticles(articles) {
+            const container = document.getElementById('articlesContent');
+            
+            if (articles.length === 0) {
+                container.innerHTML = '<div class="loading">No articles available</div>';
+                return;
+            }
+
+            container.innerHTML = articles.map(article => `
+                <div class="item">
+                    <div class="item-title">${article.title || 'Untitled'}</div>
+                    <div class="item-meta">
+                        ${article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Unknown Date'}
+                    </div>
+                    <div class="item-content">${article.content || 'No content available'}</div>
+                </div>
+            `).join('');
+        }
+
+        function displayHealth(health) {
+            const container = document.getElementById('healthContent');
+            
+            const statusClass = health.status === 'healthy' ? 'status-healthy' : 'status-unhealthy';
+            const statusText = health.status === 'healthy' ? 'Healthy' : 'Unhealthy';
+            
+            container.innerHTML = `
+                <div class="item">
+                    <div class="item-title">
+                        <span class="status-indicator ${statusClass}"></span>
+                        System Status: ${statusText}
+                    </div>
+                    <div class="item-meta">Database: ${health.database || 'Unknown'}</div>
+                    <div class="item-content">
+                        Last Updated: ${health.timestamp ? new Date(health.timestamp).toLocaleString() : 'Unknown'}
+                        ${health.error ? `<br><strong>Error:</strong> ${health.error}` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const containers = ['transcriptsContent', 'analysesContent', 'articlesContent', 'healthContent'];
+            containers.forEach(id => {
+                document.getElementById(id).innerHTML = `<div class="error">${message}</div>`;
+            });
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>

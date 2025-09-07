@@ -16,3 +16,12 @@ companies:
       - CPG
       - beverage
       - earnings
+  - name: Tesla
+    youtube_channels:
+      - UCuAj0G44lNT7wRzLdeF7l1A  # Tesla Official
+    rss_feed: https://www.tesla.com/rss
+    keywords:
+      - electric vehicles
+      - automotive
+      - energy
+      - earnings
