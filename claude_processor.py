@@ -9,6 +9,7 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from entities import Analysis, Article, Tweet
+from circuit_breaker import get_circuit_breaker, API_CONFIGS, CircuitBreakerOpenException
 
 logger = logging.getLogger("RetailXAI.ClaudeProcessor")
 
@@ -36,6 +37,7 @@ class ClaudeProcessor:
         self.prompts = prompts
         self.shutdown_event = shutdown_event
         self.max_tokens = {"analysis": 1500, "article": 2000, "twitter": 800}
+        self.circuit_breaker = get_circuit_breaker("claude", API_CONFIGS["claude"])
         logger.info(f"ClaudeProcessor initialized with model: {model}")
 
     def _check_shutdown(self) -> bool:
@@ -45,11 +47,6 @@ class ClaudeProcessor:
             return True
         return False
 
-    @retry(
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=(retry_if_exception_type(anthropic.APIConnectionError) | retry_if_exception_type(anthropic.APIError)),
-    )
     def analyze_transcript(self, transcript: str, company: str) -> Analysis:
         """Analyze a transcript or press release.
 
@@ -68,23 +65,38 @@ class ClaudeProcessor:
         prompt = self.prompts["analysis"].format(company=company, content=transcript)
 
         try:
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens["analysis"],
-                messages=[{"role": "user", "content": prompt}],
+            # Use circuit breaker for API call
+            response = self.circuit_breaker.call(
+                self._make_claude_request,
+                prompt=prompt,
+                max_tokens=self.max_tokens["analysis"]
             )
             result = self._parse_response(response.content[0].text)
             logger.info(f"Analysis completed for {company}")
             return Analysis(**result)
+        except CircuitBreakerOpenException as e:
+            logger.warning(f"Circuit breaker open for Claude API: {e}")
+            return Analysis(metrics={}, strategy={}, trends={}, consumer_insights={}, tech_observations={}, operations={}, outlook={}, error="Claude API temporarily unavailable")
         except Exception as e:
             logger.error(f"Analysis failed for {company}: {e}")
             return Analysis(metrics={}, strategy={}, trends={}, consumer_insights={}, tech_observations={}, operations={}, outlook={}, error=str(e))
 
-    @retry(
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=(retry_if_exception_type(anthropic.APIConnectionError) | retry_if_exception_type(anthropic.APIError)),
-    )
+    def _make_claude_request(self, prompt: str, max_tokens: int):
+        """Make a request to Claude API with retry logic."""
+        @retry(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=1, min=1, max=5),
+            retry=(retry_if_exception_type(anthropic.APIConnectionError) | retry_if_exception_type(anthropic.APIError)),
+        )
+        def _retry_request():
+            return self.client.messages.create(
+                model=self.model,
+                max_tokens=max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        
+        return _retry_request()
+
     def generate_article(self, analyses: List[Analysis], title_theme: str) -> Article:
         """Generate a news article from analyses.
 
@@ -103,23 +115,21 @@ class ClaudeProcessor:
         prompt = self.prompts["article"].format(title_theme=title_theme, analyses_json=analyses_json)
 
         try:
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens["article"],
-                messages=[{"role": "user", "content": prompt}],
+            response = self.circuit_breaker.call(
+                self._make_claude_request,
+                prompt=prompt,
+                max_tokens=self.max_tokens["article"]
             )
             result = self._parse_response(response.content[0].text)
             logger.info(f"Article generated: {title_theme}")
             return Article(**result)
+        except CircuitBreakerOpenException as e:
+            logger.warning(f"Circuit breaker open for Claude API: {e}")
+            return Article(headline="", summary="", body="", key_insights=[], error="Claude API temporarily unavailable")
         except Exception as e:
             logger.error(f"Article generation failed: {e}")
             return Article(headline="", summary="", body="", key_insights=[], error=str(e))
 
-    @retry(
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        retry=(retry_if_exception_type(anthropic.APIConnectionError) | retry_if_exception_type(anthropic.APIError)),
-    )
     def create_twitter_thread(self, article: Article) -> List[Tweet]:
         """Create a Twitter thread from an article.
 
@@ -139,15 +149,18 @@ class ClaudeProcessor:
         prompt = self.prompts["twitter"].format(headline=headline, summary=summary, key_insights=key_insights, hashtags=hashtags)
 
         try:
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens["twitter"],
-                messages=[{"role": "user", "content": prompt}],
+            response = self.circuit_breaker.call(
+                self._make_claude_request,
+                prompt=prompt,
+                max_tokens=self.max_tokens["twitter"]
             )
             tweets = self._parse_response(response.content[0].text, expect_list=True)
             result = [Tweet(text=tweet, order=i) for i, tweet in enumerate(tweets) if len(str(tweet)) <= 280]
             logger.info(f"Generated {len(result)} tweets")
             return result
+        except CircuitBreakerOpenException as e:
+            logger.warning(f"Circuit breaker open for Claude API: {e}")
+            return []
         except Exception as e:
             logger.error(f"Twitter thread generation failed: {e}")
             return []

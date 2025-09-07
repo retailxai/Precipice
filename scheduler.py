@@ -16,6 +16,7 @@ from database_manager import DatabaseManager
 from entities import Company
 from rss_collector import RSSCollector
 from youtube_collector import YouTubeCollector
+from health_monitor import get_health_monitor
 
 logger = logging.getLogger("RetailXAI.Scheduler")
 
@@ -141,6 +142,14 @@ class RetailXAIScheduler:
             self.config["global"]["api_keys"]["twitter"],
             self.shutdown_event,
         )
+        
+        # Initialize health monitor
+        self.health_monitor = get_health_monitor(self.db_manager)
+        
+        # Initialize agent manager with database
+        from agent_manager import AgentManager
+        self.agent_manager = AgentManager(shutdown_event=self.shutdown_event)
+        self.agent_manager.set_database_manager(self.db_manager)
 
     def _load_companies(self) -> list[Company]:
         """Load companies from YAML file.
@@ -246,6 +255,93 @@ class RetailXAIScheduler:
         # Placeholder for future implementation
         logger.info("Quota check task not implemented yet")
 
+    def health_check(self) -> None:
+        """Run comprehensive health checks."""
+        if self.shutdown_event.is_set():
+            logger.info("Shutdown requested, stopping health check")
+            return
+        
+        try:
+            logger.info("Running health checks...")
+            self.health_monitor.run_health_checks()
+            
+            if self.health_monitor.is_healthy():
+                logger.info("All health checks passed")
+            else:
+                failed_checks = self.health_monitor.get_failed_checks()
+                logger.warning(f"Health checks failed: {[c.name for c in failed_checks]}")
+                
+                # Log detailed health summary
+                summary = self.health_monitor.get_health_summary()
+                logger.warning(f"Health Summary:\n{summary}")
+                
+        except Exception as e:
+            logger.error(f"Health check job failed: {e}")
+
+    def memory_cleanup(self) -> None:
+        """Run memory cleanup to prevent memory leaks."""
+        if self.shutdown_event.is_set():
+            logger.info("Shutdown requested, stopping memory cleanup")
+            return
+        
+        try:
+            logger.info("Running memory cleanup...")
+            
+            # Clean up old execution history
+            if hasattr(self, 'agent_manager'):
+                removed_count = self.agent_manager.cleanup_old_history()
+                logger.info(f"Cleaned up {removed_count} old execution history entries")
+            
+            # Log memory usage
+            if hasattr(self, 'agent_manager'):
+                memory_info = self.agent_manager.get_memory_usage()
+                logger.info(f"Memory usage: {memory_info}")
+            
+            # Force garbage collection
+            import gc
+            collected = gc.collect()
+            if collected > 0:
+                logger.info(f"Garbage collection freed {collected} objects")
+                
+        except Exception as e:
+            logger.error(f"Memory cleanup job failed: {e}")
+
+    def startup_recovery(self) -> None:
+        """Perform startup recovery and validation."""
+        if self.shutdown_event.is_set():
+            logger.info("Shutdown requested, skipping startup recovery")
+            return
+        
+        try:
+            logger.info("Performing startup recovery...")
+            
+            # Run health checks
+            self.health_monitor.run_health_checks()
+            
+            # Recover agent states
+            if hasattr(self, 'agent_manager'):
+                recovery_info = self.agent_manager.recover_from_crash()
+                
+                if recovery_info['incomplete_operations']:
+                    logger.warning(f"Found {len(recovery_info['incomplete_operations'])} incomplete operations: {recovery_info['incomplete_operations']}")
+                
+                if recovery_info['recovered_agents']:
+                    logger.info(f"Recovered {len(recovery_info['recovered_agents'])} agents: {recovery_info['recovered_agents']}")
+                
+                if recovery_info['errors']:
+                    for error in recovery_info['errors']:
+                        logger.error(f"Recovery error: {error}")
+            
+            # Log system status
+            if hasattr(self, 'agent_manager'):
+                status = self.agent_manager.get_system_status()
+                logger.info(f"System status: {status}")
+            
+            logger.info("Startup recovery completed")
+            
+        except Exception as e:
+            logger.error(f"Startup recovery failed: {e}")
+
     def setup_schedule(self) -> None:
         """Set up scheduled tasks from schedule.yaml."""
         schedule.clear()
@@ -253,6 +349,8 @@ class RetailXAIScheduler:
             "daily_earnings_scan": self.daily_earnings_scan,
             "weekly_summary": self.weekly_summary,
             "quota_check": self.quota_check,
+            "health_check": self.health_check,
+            "memory_cleanup": self.memory_cleanup,
         }
         for task in self.schedule_config.get("tasks", []):
             if not task.get("enabled", True):
@@ -275,6 +373,10 @@ class RetailXAIScheduler:
     def run(self) -> None:
         """Run the scheduler."""
         logger.info("RetailXAI Scheduler started")
+        
+        # Perform startup recovery
+        self.startup_recovery()
+        
         try:
             while not self.shutdown_event.is_set():
                 schedule.run_pending()
@@ -283,10 +385,17 @@ class RetailXAIScheduler:
         except Exception as e:
             logger.error(f"Scheduler error: {e}")
             self.shutdown_event.set()
-        logger.info("Scheduler shutdown initiated")
-        self._wait_for_jobs_completion()
-        self.db_manager.close()
-        logger.info("Scheduler shutdown complete")
+        finally:
+            logger.info("Scheduler shutdown initiated")
+            self._wait_for_jobs_completion()
+            
+            # Save final agent states
+            if hasattr(self, 'agent_manager'):
+                self.agent_manager._save_all_agent_states()
+                self.agent_manager.shutdown()
+            
+            self.db_manager.close()
+            logger.info("Scheduler shutdown complete")
 
     def _wait_for_jobs_completion(self, timeout: int = 30) -> None:
         """Wait for running jobs to complete.

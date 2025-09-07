@@ -10,6 +10,7 @@ from googleapiclient.errors import HttpError
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from entities import Company, Transcript
+from circuit_breaker import get_circuit_breaker, API_CONFIGS, CircuitBreakerOpenException
 
 logger = logging.getLogger("RetailXAI.YouTubeCollector")
 
@@ -29,6 +30,7 @@ class YouTubeCollector:
         self.companies = companies
         self.shutdown_event = shutdown_event
         self.quota_file = "logs/youtube_quota_usage.json"
+        self.circuit_breaker = get_circuit_breaker("youtube", API_CONFIGS["youtube"])
         self._load_quota_usage()
 
     def _check_shutdown(self) -> bool:
@@ -114,16 +116,10 @@ class YouTubeCollector:
 
         try:
             self._increment_quota_usage()
-            response = (
-                self.youtube.search()
-                .list(
-                    q=query,
-                    part="id,snippet",
-                    maxResults=max_results,
-                    type="video",
-                    order="date",
-                )
-                .execute()
+            response = self.circuit_breaker.call(
+                self._execute_youtube_search,
+                query=query,
+                max_results=max_results
             )
             videos = [
                 {
@@ -137,12 +133,29 @@ class YouTubeCollector:
             ]
             logger.debug(f"Found {len(videos)} videos for query: {query}")
             return videos
+        except CircuitBreakerOpenException as e:
+            logger.warning(f"Circuit breaker open for YouTube API: {e}")
+            return []
         except HttpError as e:
             logger.error(f"YouTube API error during search: {e}")
             return []
         except Exception as e:
             logger.error(f"Unexpected error during YouTube search: {e}")
             return []
+
+    def _execute_youtube_search(self, query: str, max_results: int) -> dict:
+        """Execute YouTube search API call."""
+        return (
+            self.youtube.search()
+            .list(
+                q=query,
+                part="id,snippet",
+                maxResults=max_results,
+                type="video",
+                order="date",
+            )
+            .execute()
+        )
 
     def _get_videos_for_channel(self, channel_id: str, max_results: int = 5) -> List[dict]:
         """Get recent videos for a YouTube channel.
@@ -159,16 +172,10 @@ class YouTubeCollector:
 
         try:
             self._increment_quota_usage()
-            response = (
-                self.youtube.search()
-                .list(
-                    channelId=channel_id,
-                    part="id,snippet",
-                    maxResults=max_results,
-                    order="date",
-                    type="video",
-                )
-                .execute()
+            response = self.circuit_breaker.call(
+                self._execute_channel_search,
+                channel_id=channel_id,
+                max_results=max_results
             )
             videos = [
                 {
@@ -182,12 +189,29 @@ class YouTubeCollector:
             ]
             logger.debug(f"Found {len(videos)} videos for channel: {channel_id}")
             return videos
+        except CircuitBreakerOpenException as e:
+            logger.warning(f"Circuit breaker open for YouTube API: {e}")
+            return []
         except HttpError as e:
             logger.error(f"YouTube API error for channel {channel_id}: {e}")
             return []
         except Exception as e:
             logger.error(f"Unexpected error for channel {channel_id}: {e}")
             return []
+
+    def _execute_channel_search(self, channel_id: str, max_results: int) -> dict:
+        """Execute YouTube channel search API call."""
+        return (
+            self.youtube.search()
+            .list(
+                channelId=channel_id,
+                part="id,snippet",
+                maxResults=max_results,
+                order="date",
+                type="video",
+            )
+            .execute()
+        )
 
     def _get_transcript(self, video_id: str, company: str) -> Optional[Transcript]:
         """Fetch and validate transcript for a video.

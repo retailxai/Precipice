@@ -28,9 +28,12 @@ class AgentManager:
         self.agents: Dict[str, BaseAgent] = {}
         self.agent_configs: Dict[str, AgentConfig] = {}
         self.execution_history: List[AgentResult] = []
+        self.max_history_size = 1000  # Limit history size to prevent memory leaks
         self.companies: List[Company] = []
+        self.db_manager = None  # Will be set by scheduler
         self._load_configuration()
         self._initialize_agents()
+        self._load_agent_states()
 
     def _load_configuration(self) -> None:
         """Load agent configuration from YAML file."""
@@ -143,9 +146,12 @@ class AgentManager:
         result = await agent.run_with_retry()
         self.execution_history.append(result)
         
-        # Keep only last 1000 results
-        if len(self.execution_history) > 1000:
-            self.execution_history = self.execution_history[-1000:]
+        # Save agent state after execution
+        self._save_agent_state(agent_name)
+        
+        # Keep only last max_history_size results to prevent memory leaks
+        if len(self.execution_history) > self.max_history_size:
+            self.execution_history = self.execution_history[-self.max_history_size:]
             
         return result
 
@@ -387,3 +393,185 @@ class AgentManager:
             logger.info(f"Disabled agent: {agent_name}")
             return True
         return False
+
+    def cleanup_old_history(self, max_age_hours: int = 24) -> int:
+        """Clean up old execution history to prevent memory leaks.
+        
+        Args:
+            max_age_hours: Maximum age of history entries in hours.
+            
+        Returns:
+            Number of entries removed.
+        """
+        from datetime import datetime, timedelta
+        
+        cutoff_time = datetime.now() - timedelta(hours=max_age_hours)
+        initial_count = len(self.execution_history)
+        
+        # Remove old entries
+        self.execution_history = [
+            result for result in self.execution_history 
+            if result.timestamp and result.timestamp > cutoff_time
+        ]
+        
+        removed_count = initial_count - len(self.execution_history)
+        if removed_count > 0:
+            logger.info(f"Cleaned up {removed_count} old execution history entries")
+        
+        return removed_count
+
+    def get_memory_usage(self) -> Dict[str, Any]:
+        """Get memory usage information.
+        
+        Returns:
+            Dictionary with memory usage details.
+        """
+        import sys
+        
+        return {
+            'execution_history_size': len(self.execution_history),
+            'max_history_size': self.max_history_size,
+            'agents_count': len(self.agents),
+            'agent_configs_count': len(self.agent_configs),
+            'companies_count': len(self.companies),
+            'estimated_memory_mb': sys.getsizeof(self.execution_history) / (1024 * 1024)
+        }
+
+    def shutdown(self) -> None:
+        """Shutdown the agent manager and cleanup resources."""
+        logger.info("Shutting down agent manager...")
+        
+        # Clean up old history
+        self.cleanup_old_history()
+        
+        # Clear large data structures
+        self.execution_history.clear()
+        self.companies.clear()
+        
+        # Disable all agents
+        for agent_name in list(self.agents.keys()):
+            self.disable_agent(agent_name)
+        
+        logger.info("Agent manager shutdown complete")
+
+    def set_database_manager(self, db_manager) -> None:
+        """Set the database manager for state persistence.
+        
+        Args:
+            db_manager: Database manager instance.
+        """
+        self.db_manager = db_manager
+
+    def _load_agent_states(self) -> None:
+        """Load agent states from database on startup."""
+        if not self.db_manager:
+            logger.warning("No database manager available for state loading")
+            return
+        
+        try:
+            for agent_name in self.agents.keys():
+                state = self.db_manager.get_agent_state(agent_name)
+                if state:
+                    # Restore agent state
+                    if 'last_execution' in state and state['last_execution']:
+                        from datetime import datetime
+                        self.agents[agent_name].last_execution = datetime.fromisoformat(state['last_execution'])
+                    
+                    if 'execution_count' in state:
+                        self.agents[agent_name].execution_count = state['execution_count']
+                    
+                    if 'error_count' in state:
+                        self.agents[agent_name].error_count = state['error_count']
+                    
+                    logger.info(f"Restored state for agent: {agent_name}")
+        except Exception as e:
+            logger.error(f"Failed to load agent states: {e}")
+
+    def _save_agent_state(self, agent_name: str) -> None:
+        """Save agent state to database.
+        
+        Args:
+            agent_name: Name of the agent to save state for.
+        """
+        if not self.db_manager or agent_name not in self.agents:
+            return
+        
+        try:
+            agent = self.agents[agent_name]
+            state = {
+                'last_execution': agent.last_execution.isoformat() if agent.last_execution else None,
+                'execution_count': agent.execution_count,
+                'error_count': agent.error_count,
+                'is_running': agent.is_running,
+                'enabled': agent.config.enabled
+            }
+            self.db_manager.save_agent_state(agent_name, state)
+        except Exception as e:
+            logger.error(f"Failed to save state for agent {agent_name}: {e}")
+
+    def _save_all_agent_states(self) -> None:
+        """Save states for all agents."""
+        for agent_name in self.agents.keys():
+            self._save_agent_state(agent_name)
+
+    def recover_from_crash(self) -> Dict[str, Any]:
+        """Recover from a crash by checking for incomplete operations.
+        
+        Returns:
+            Dictionary with recovery information.
+        """
+        recovery_info = {
+            'incomplete_operations': [],
+            'recovered_agents': [],
+            'errors': []
+        }
+        
+        if not self.db_manager:
+            recovery_info['errors'].append("No database manager available for recovery")
+            return recovery_info
+        
+        try:
+            # Check for agents that were running when the crash occurred
+            for agent_name, agent in self.agents.items():
+                state = self.db_manager.get_agent_state(agent_name)
+                if state and state.get('is_running', False):
+                    recovery_info['incomplete_operations'].append(agent_name)
+                    # Reset running state
+                    agent.is_running = False
+                    recovery_info['recovered_agents'].append(agent_name)
+            
+            # Clean up any stale data
+            self.cleanup_old_history(max_age_hours=1)  # Clean up very old data
+            
+            logger.info(f"Recovery completed: {len(recovery_info['recovered_agents'])} agents recovered")
+            
+        except Exception as e:
+            error_msg = f"Recovery failed: {e}"
+            logger.error(error_msg)
+            recovery_info['errors'].append(error_msg)
+        
+        return recovery_info
+
+    def get_system_status(self) -> Dict[str, Any]:
+        """Get comprehensive system status.
+        
+        Returns:
+            Dictionary with system status information.
+        """
+        status = {
+            'agents': {},
+            'execution_history_size': len(self.execution_history),
+            'memory_usage': self.get_memory_usage(),
+            'database_connected': self.db_manager is not None and self.db_manager.is_healthy() if self.db_manager else False
+        }
+        
+        for agent_name, agent in self.agents.items():
+            status['agents'][agent_name] = {
+                'enabled': agent.config.enabled,
+                'is_running': agent.is_running,
+                'last_execution': agent.last_execution.isoformat() if agent.last_execution else None,
+                'execution_count': agent.execution_count,
+                'error_count': agent.error_count
+            }
+        
+        return status

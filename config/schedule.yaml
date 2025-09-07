@@ -21,3 +21,15 @@ tasks:
     enabled: true
     description: |
       Check and reset YouTube API quota usage
+  - name: health_check
+    type: daily
+    time: "00:00"
+    enabled: true
+    description: |
+      Run comprehensive health checks for system monitoring
+  - name: memory_cleanup
+    type: daily
+    time: "02:00"
+    enabled: true
+    description: |
+      Clean up old data and run garbage collection to prevent memory leaks
