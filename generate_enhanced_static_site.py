@@ -187,10 +187,16 @@ def generate_html(data):
         </div>
         """
     
-    # Health status
-    health_status = health.get('status', 'unknown')
-    health_class = 'status-healthy' if health_status == 'healthy' else 'status-unhealthy'
-    health_text = 'Healthy' if health_status == 'healthy' else 'Unhealthy'
+    # Health status - determine from health checks
+    health_checks = health.get('health_checks', [])
+    all_healthy = all(check.get('status', False) for check in health_checks) if health_checks else False
+    database_connected = health.get('database_connected', False)
+    
+    # System is healthy if all checks pass and database is connected
+    is_healthy = all_healthy and database_connected
+    
+    health_class = 'status-healthy' if is_healthy else 'status-unhealthy'
+    health_text = 'Healthy' if is_healthy else 'Unhealthy'
     
     html_content = f"""
 <!DOCTYPE html>
@@ -430,7 +436,7 @@ def generate_html(data):
                             <span class="status-indicator {health_class}"></span>
                             System Status: {health_text}
                         </div>
-                        <div class="item-meta">Database: {health.get('database', 'Unknown')}</div>
+                        <div class="item-meta">Database: {'Connected' if database_connected else 'Disconnected'}</div>
                         <div class="item-content">
                             Last Updated: {health.get('timestamp', 'Unknown')}
                         </div>
