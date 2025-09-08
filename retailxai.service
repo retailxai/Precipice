@@ -1,0 +1,33 @@
+[Unit]
+Description=RetailXAI Data Collection and Processing System
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=retailxai
+Group=retailxai
+WorkingDirectory=/Users/jbriss/github-retailxai/Precipice-1
+Environment=PYTHONPATH=/Users/jbriss/github-retailxai/Precipice-1
+ExecStart=/Users/jbriss/github-retailxai/Precipice-1/venv/bin/python main.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=retailxai
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=32768
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/Users/jbriss/github-retailxai/Precipice-1/logs
+ReadWritePaths=/Users/jbriss/github-retailxai/Precipice-1/config
+
+[Install]
+WantedBy=multi-user.target

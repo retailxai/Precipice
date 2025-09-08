@@ -86,9 +86,10 @@ def get_analyses():
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                SELECT a.*, c.name as company_name 
+                SELECT a.*, c.name as company_name, t.title as transcript_title
                 FROM analyses a 
-                LEFT JOIN companies c ON a.company_id = c.id 
+                LEFT JOIN transcripts t ON a.transcript_id = t.id
+                LEFT JOIN companies c ON t.company_id = c.id 
                 ORDER BY a.created_at DESC 
                 LIMIT 50
             """)
@@ -194,3 +195,46 @@ def get_stats():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 
+
+@app.route('/api/health/detailed')
+def get_detailed_health():
+    """Get detailed system health information."""
+    try:
+        from production_monitor import ProductionMonitor
+        
+        config = {
+            'email': {
+                'smtp_server': os.getenv('ALERT_EMAIL_SMTP', 'smtp.gmail.com'),
+                'smtp_port': int(os.getenv('ALERT_EMAIL_PORT', '587')),
+                'username': os.getenv('ALERT_EMAIL_USER'),
+                'password': os.getenv('ALERT_EMAIL_PASS'),
+                'from': os.getenv('ALERT_EMAIL_FROM'),
+                'to': [os.getenv('ALERT_EMAIL_TO')]
+            },
+            'slack_webhook': os.getenv('SLACK_WEBHOOK_URL')
+        }
+        
+        monitor = ProductionMonitor(config)
+        dashboard = monitor.get_production_dashboard()
+        
+        return jsonify(dashboard)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/health/sla')
+def get_sla_metrics():
+    """Get SLA metrics."""
+    try:
+        from production_monitor import ProductionMonitor
+        
+        config = {}
+        monitor = ProductionMonitor(config)
+        health_status = monitor.check_system_health()
+        
+        return jsonify({
+            'sla_metrics': health_status.get('sla_metrics', {}),
+            'overall_status': health_status.get('overall_status', 'UNKNOWN'),
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

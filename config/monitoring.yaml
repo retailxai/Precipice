@@ -1,0 +1,23 @@
+alerts:
+  email:
+    enabled: true
+    from: ${ALERT_EMAIL_FROM}
+    password: ${ALERT_EMAIL_PASS}
+    smtp_port: 587
+    smtp_server: smtp.gmail.com
+    to:
+    - ${ALERT_EMAIL_TO}
+    username: ${ALERT_EMAIL_USER}
+  slack:
+    channel: '#retailxai-alerts'
+    enabled: true
+    webhook_url: ${SLACK_WEBHOOK_URL}
+metrics:
+  collection_interval: 60
+  export_interval: 300
+  retention_days: 30
+sla_targets:
+  data_freshness_minutes: 60
+  error_rate_percent: 1.0
+  response_time_ms: 2000
+  uptime: 99.9

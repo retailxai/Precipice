@@ -1,0 +1,16 @@
+{
+  "youtube": {
+    "daily_limit": 10000,
+    "current_usage": 0,
+    "reset_time": "00:00",
+    "emergency_threshold": 9000,
+    "circuit_breaker_threshold": 9500
+  },
+  "claude": {
+    "daily_limit": 2000,
+    "current_usage": 0,
+    "reset_time": "00:00",
+    "emergency_threshold": 1800,
+    "circuit_breaker_threshold": 1900
+  }
+}
