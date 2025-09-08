@@ -158,7 +158,7 @@ class RetailXAIScheduler:
             List of Company entities.
         """
         try:
-            with open(self.config["sources"]["youtube"]["channels"], "r", encoding="utf-8") as f:
+            with open("config/companies.yaml", "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
                 return [
                     Company(

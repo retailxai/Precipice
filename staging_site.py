@@ -221,6 +221,31 @@ def get_detailed_health():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/health/detailed')
+def get_detailed_health():
+    """Get detailed system health information."""
+    try:
+        from production_monitor import ProductionMonitor
+        
+        config = {
+            'email': {
+                'smtp_server': os.getenv('ALERT_EMAIL_SMTP', 'smtp.gmail.com'),
+                'smtp_port': int(os.getenv('ALERT_EMAIL_PORT', '587')),
+                'username': os.getenv('ALERT_EMAIL_USER'),
+                'password': os.getenv('ALERT_EMAIL_PASS'),
+                'from': os.getenv('ALERT_EMAIL_FROM'),
+                'to': [os.getenv('ALERT_EMAIL_TO')]
+            },
+            'slack_webhook': os.getenv('SLACK_WEBHOOK_URL')
+        }
+        
+        monitor = ProductionMonitor(config)
+        dashboard = monitor.get_production_dashboard()
+        
+        return jsonify(dashboard)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/health/sla')
 def get_sla_metrics():
     """Get SLA metrics."""

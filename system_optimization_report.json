@@ -1,0 +1,132 @@
+{
+  "timestamp": "2025-09-07T20:25:11.869833",
+  "system_health": {
+    "timestamp": "2025-09-07T20:25:10.971074",
+    "api_health": {
+      "endpoints": {
+        "/api/health": {
+          "status": "healthy",
+          "response_time_ms": 75.07,
+          "status_code": 200,
+          "data_size": 3609
+        },
+        "/api/stats": {
+          "status": "healthy",
+          "response_time_ms": 60.66,
+          "status_code": 200,
+          "data_size": 120
+        },
+        "/api/transcripts": {
+          "status": "healthy",
+          "response_time_ms": 62.96,
+          "status_code": 200,
+          "data_size": 391
+        },
+        "/api/analyses": {
+          "status": "healthy",
+          "response_time_ms": 67.35,
+          "status_code": 200,
+          "data_size": 3073
+        },
+        "/api/articles": {
+          "status": "healthy",
+          "response_time_ms": 63.91,
+          "status_code": 200,
+          "data_size": 628
+        },
+        "/api/companies": {
+          "status": "healthy",
+          "response_time_ms": 58.53,
+          "status_code": 200,
+          "data_size": 597
+        }
+      },
+      "avg_response_time_ms": 64.75,
+      "success_rate_percent": 100.0,
+      "total_endpoints": 6,
+      "healthy_endpoints": 6
+    },
+    "database_health": {
+      "status": "healthy",
+      "response_time_ms": 2.60162353515625,
+      "query_time_ms": 1.7528533935546875,
+      "connected": true
+    },
+    "performance_metrics": {
+      "status": "healthy",
+      "data": {
+        "analyses": 5,
+        "analyses_24h": 5,
+        "articles": 1,
+        "companies": 3,
+        "transcripts": 1,
+        "transcripts_24h": 1
+      },
+      "response_time_ms": 52.283
+    },
+    "resource_usage": {
+      "status": "healthy",
+      "resources": {
+        "memory": {
+          "used_percent": 46.0,
+          "total_gb": 0.9384727478027344,
+          "available_gb": 0.507080078125
+        },
+        "disk": {
+          "free_gb": 17.905620574951172,
+          "total_gb": 23.09906005859375,
+          "used_gb": 5.177814483642578
+        }
+      }
+    },
+    "error_analysis": {
+      "api_errors": [],
+      "database_errors": [],
+      "performance_issues": [],
+      "recommendations": []
+    },
+    "data_quality": {
+      "status": "healthy",
+      "data_counts": {
+        "transcripts": 1,
+        "analyses": 5,
+        "articles": 1,
+        "companies": 3
+      },
+      "data_freshness": {
+        "status": "stale",
+        "issues": [
+          "transcripts: 1 items",
+          "analyses: 5 items",
+          "articles: 1 items"
+        ]
+      },
+      "data_completeness": {
+        "status": "healthy",
+        "issues": []
+      }
+    }
+  },
+  "issues_found": [],
+  "optimizations_applied": [
+    "Database schema optimization",
+    "API endpoint optimization",
+    "Configuration optimization"
+  ],
+  "optimizations_failed": [],
+  "recommendations": [
+    "Implement automated data backup and recovery procedures",
+    "Set up comprehensive monitoring and alerting",
+    "Consider implementing rate limiting for API endpoints",
+    "Optimize database queries for better performance",
+    "Implement data validation and sanitization"
+  ],
+  "overall_status": "EXCELLENT",
+  "next_steps": [
+    "Monitor system performance continuously",
+    "Implement automated testing and validation",
+    "Set up comprehensive alerting and monitoring",
+    "Regularly review and optimize database queries",
+    "Plan for horizontal scaling as data grows"
+  ]
+}
