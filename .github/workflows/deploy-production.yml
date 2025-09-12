@@ -1,0 +1,65 @@
+name: Deploy Production Dashboard to Server
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'production_dashboard_simple.py'
+      - 'production_dashboard.py'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to Production Server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        script: |
+          # Update the production dashboard
+          cd /home/retailxai/dashboard-prod
+          
+          # Pull latest changes (if using git on server)
+          # git pull origin master
+          
+          # Copy the new production dashboard file
+          # This will be done via scp in the next step
+          
+          # Restart the service
+          systemctl restart retailxai-dashboard-prod
+          
+          # Check service status
+          systemctl status retailxai-dashboard-prod --no-pager
+          
+          # Test the API
+          curl -f http://localhost:8002/api/health || exit 1
+          
+    - name: Copy Production Files
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        source: "production_dashboard_simple.py"
+        target: "/home/retailxai/dashboard-prod/production_dashboard.py"
+        
+    - name: Final Health Check
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        script: |
+          # Wait a moment for service to fully start
+          sleep 5
+          
+          # Test the production dashboard
+          curl -f http://localhost:8002/api/health
+          echo "Production dashboard is running successfully!"
