@@ -85,6 +85,7 @@ class YouTubeTranscriptionService:
         
         # Try multiple transcription methods in order of preference
         methods = [
+            self._transcribe_with_youtube_api_direct,
             self._transcribe_with_youtube_api,
             self._transcribe_with_whisper,
             self._transcribe_with_yt_dlp
@@ -114,17 +115,59 @@ class YouTubeTranscriptionService:
         except Exception:
             return None
     
+    def _transcribe_with_youtube_api_direct(self, video_url: str, video_id: str) -> Optional[TranscriptionResult]:
+        """Try to get transcript using YouTube Transcript API directly (no yt-dlp)."""
+        try:
+            # Try to get transcript directly without yt-dlp
+            api = YouTubeTranscriptApi()
+            transcript_list = api.list(video_id)
+            
+            # Try different languages
+            for transcript in transcript_list:
+                try:
+                    transcript_data = transcript.fetch()
+                    transcript_text = " ".join([item['text'] for item in transcript_data])
+                    
+                    return TranscriptionResult(
+                        video_id=video_id,
+                        title=f"Video {video_id}",  # We don't have title without yt-dlp
+                        transcript=transcript_text,
+                        duration=0,  # We don't have duration without yt-dlp
+                        language=transcript.language,
+                        confidence=0.9,  # High confidence for official transcripts
+                        method="youtube_api_direct",
+                        timestamp=datetime.now()
+                    )
+                except Exception:
+                    continue
+            
+            return None
+        except Exception as e:
+            logger.debug(f"YouTube API direct transcription failed: {e}")
+            return None
+    
     def _transcribe_with_youtube_api(self, video_url: str, video_id: str) -> Optional[TranscriptionResult]:
         """Try to get transcript using YouTube's official API."""
         try:
-            # Get video info first
-            with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+            # Get video info first with better options to avoid bot detection
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'extract_flat': False,
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'sleep_interval': 1,
+                'max_sleep_interval': 5
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(video_url, download=False)
                 title = info.get('title', 'Unknown Title')
                 duration = info.get('duration', 0)
             
             # Try to get transcript
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            api = YouTubeTranscriptApi()
+            transcript_list = api.list(video_id)
             
             # Try different languages
             for transcript in transcript_list:
@@ -164,7 +207,12 @@ class YouTubeTranscriptionService:
                 'outtmpl': temp_file,
                 'extractaudio': True,
                 'audioformat': 'wav',
-                'quiet': True
+                'quiet': True,
+                'no_warnings': True,
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'sleep_interval': 1,
+                'max_sleep_interval': 5
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -203,7 +251,12 @@ class YouTubeTranscriptionService:
                 'writesubtitles': True,
                 'writeautomaticsub': True,
                 'subtitleslangs': ['en'],
-                'quiet': True
+                'quiet': True,
+                'no_warnings': True,
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'referer': 'https://www.youtube.com/',
+                'sleep_interval': 1,
+                'max_sleep_interval': 5
             }
             
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
