@@ -1,0 +1,68 @@
+name: YouTube CLI Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'articles/**'
+      - 'transcripts/**'
+      - 'analyses/**'
+      - 'youtube_cli.py'
+      - 'youtube-ai'
+  workflow_dispatch:
+
+jobs:
+  deploy-content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check for new content
+        id: check-content
+        run: |
+          if [ -d "articles" ] && [ "$(ls -A articles 2>/dev/null)" ]; then
+            echo "has_content=true" >> $GITHUB_OUTPUT
+            echo "Found new articles to deploy"
+            ls -la articles/
+          else
+            echo "has_content=false" >> $GITHUB_OUTPUT
+            echo "No new articles found"
+          fi
+      
+      - name: Deploy to production server
+        if: steps.check-content.outputs.has_content == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            # Navigate to production directory
+            cd /home/retailxai/precipice
+            
+            # Create directories if they don't exist
+            mkdir -p articles transcripts analyses
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Set proper permissions
+            chmod +x youtube-ai
+            chmod +x youtube_cli.py
+            
+            # Restart services if needed
+            systemctl restart retailxai.service || true
+            
+            echo "✅ Content deployed successfully"
+            echo "📁 Articles directory:"
+            ls -la articles/ | head -10
+      
+      - name: Notify deployment
+        if: steps.check-content.outputs.has_content == 'true'
+        run: |
+          echo "🚀 YouTube CLI content deployed to production!"
+          echo "📊 Deployed files:"
+          find articles/ transcripts/ analyses/ -name "*.md" -o -name "*.json" -o -name "*.txt" | head -10

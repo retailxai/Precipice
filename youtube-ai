@@ -1,0 +1,36 @@
+#!/bin/bash
+# YouTube AI CLI Wrapper
+# This script ensures the correct Python environment and dependencies
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# If we're in ~/bin, find the actual project directory
+if [[ "$SCRIPT_DIR" == *"/bin" ]]; then
+    SCRIPT_DIR="/Users/jbriss/github-retailxai/Precipice-1"
+fi
+
+# Change to the project directory
+cd "$SCRIPT_DIR"
+
+# Check if virtual environment exists, create if not
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Install dependencies if requirements.txt exists
+if [ -f "requirements.txt" ]; then
+    echo "Installing dependencies..."
+    pip install -q -r requirements.txt
+fi
+
+# Install additional YouTube CLI dependencies
+echo "Installing YouTube CLI dependencies..."
+pip install -q youtube-transcript-api yt-dlp openai-whisper anthropic tweepy python-dotenv
+
+# Run the YouTube CLI with all arguments
+python3 "$SCRIPT_DIR/youtube_cli.py" "$@"
