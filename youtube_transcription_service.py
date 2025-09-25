@@ -13,9 +13,16 @@ from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
 import yt_dlp
-import whisper
 import requests
 from youtube_transcript_api import YouTubeTranscriptApi
+
+# Optional Whisper import
+try:
+    import whisper
+    WHISPER_AVAILABLE = True
+except ImportError:
+    WHISPER_AVAILABLE = False
+    whisper = None
 
 logger = logging.getLogger("RetailXAI.YouTubeTranscription")
 
@@ -50,6 +57,11 @@ class YouTubeTranscriptionService:
     
     def _init_whisper(self):
         """Initialize Whisper model."""
+        if not WHISPER_AVAILABLE:
+            logger.warning("Whisper not available - skipping Whisper initialization")
+            self.whisper_model_instance = None
+            return
+            
         try:
             self.whisper_model_instance = whisper.load_model(self.whisper_model)
             logger.info(f"Whisper model '{self.whisper_model}' loaded successfully")
