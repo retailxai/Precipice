@@ -293,12 +293,14 @@ Generate 3-5 tweets as a JSON array of strings, each under 280 characters.
 def main():
     """Main CLI function."""
     parser = argparse.ArgumentParser(
-        description="YouTube CLI Tool for RetailXAI - Transcribe and analyze YouTube videos"
+        description="YouTube CLI Tool for RetailXAI - Transcribe and analyze YouTube videos",
+        epilog="If no video URL is provided, the tool will prompt you interactively for all required information."
     )
     
     parser.add_argument(
         "video_url",
-        help="YouTube video URL to process"
+        nargs="?",
+        help="YouTube video URL to process (will prompt if not provided)"
     )
     
     parser.add_argument(
@@ -340,6 +342,43 @@ def main():
     
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+    
+    # Interactive prompting if video URL not provided
+    if not args.video_url:
+        print("🎥 YouTube CLI Tool for RetailXAI")
+        print("=" * 40)
+        print()
+        
+        # Prompt for video URL
+        while True:
+            video_url = input("Enter YouTube video URL: ").strip()
+            if video_url:
+                if "youtube.com" in video_url or "youtu.be" in video_url:
+                    args.video_url = video_url
+                    break
+                else:
+                    print("❌ Please enter a valid YouTube URL (youtube.com or youtu.be)")
+            else:
+                print("❌ URL cannot be empty")
+        
+        print()
+        
+        # Prompt for company (optional)
+        company_input = input(f"Enter company name (default: {args.company}): ").strip()
+        if company_input:
+            args.company = company_input
+        
+        # Prompt for theme (optional)
+        theme_input = input(f"Enter article theme (default: {args.theme}): ").strip()
+        if theme_input:
+            args.theme = theme_input
+        
+        # Prompt for publishing (optional)
+        publish_input = input("Publish to channel? (substack/twitter/linkedin) or press Enter to skip: ").strip().lower()
+        if publish_input in ["substack", "twitter", "linkedin"]:
+            args.publish = publish_input
+        
+        print()
     
     # Initialize CLI
     cli = YouTubeCLI()
