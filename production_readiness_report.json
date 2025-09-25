@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-09-07T20:26:55.277551",
+  "timestamp": "2025-09-07T20:28:30.367412",
   "overall_status": "NEARLY READY",
   "readiness_score": 88.1,
   "total_checks": 42,
@@ -13,43 +13,43 @@
       "category": "API Availability",
       "check": "Endpoint /api/health",
       "status": "PASS",
-      "details": "Response time: 78.86ms"
+      "details": "Response time: 69.38ms"
     },
     {
       "category": "API Availability",
       "check": "Endpoint /api/stats",
       "status": "PASS",
-      "details": "Response time: 64.79ms"
+      "details": "Response time: 60.01ms"
     },
     {
       "category": "API Availability",
       "check": "Endpoint /api/transcripts",
       "status": "PASS",
-      "details": "Response time: 68.14ms"
+      "details": "Response time: 62.34ms"
     },
     {
       "category": "API Availability",
       "check": "Endpoint /api/analyses",
       "status": "PASS",
-      "details": "Response time: 62.63ms"
+      "details": "Response time: 64.25ms"
     },
     {
       "category": "API Availability",
       "check": "Endpoint /api/articles",
       "status": "PASS",
-      "details": "Response time: 69.72ms"
+      "details": "Response time: 60.20ms"
     },
     {
       "category": "API Availability",
       "check": "Endpoint /api/companies",
       "status": "PASS",
-      "details": "Response time: 69.10ms"
+      "details": "Response time: 61.31ms"
     },
     {
       "category": "API Performance",
       "check": "Average Response Time",
       "status": "PASS",
-      "details": "Average: 68.87ms (excellent)"
+      "details": "Average: 62.91ms (excellent)"
     },
     {
       "category": "Database",
@@ -109,7 +109,7 @@
       "category": "Performance",
       "check": "Response Time SLA",
       "status": "PASS",
-      "details": "Response time: 65.12ms (excellent)"
+      "details": "Response time: 62.29ms (excellent)"
     },
     {
       "category": "Performance",

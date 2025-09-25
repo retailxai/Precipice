@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/jbriss/github-retailxai/Precipice-1/maintenance_server.py", line 7, in <module>
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'

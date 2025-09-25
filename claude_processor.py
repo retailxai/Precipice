@@ -72,14 +72,84 @@ class ClaudeProcessor:
                 max_tokens=self.max_tokens["analysis"]
             )
             result = self._parse_response(response.content[0].text)
+            
+            # Extract sentiment and confidence from metrics if available
+            sentiment = None
+            confidence = None
+            if isinstance(result, dict) and 'metrics' in result:
+                metrics = result['metrics']
+                sentiment = metrics.get('sentiment')
+                confidence = metrics.get('confidence')
+            
+            # Create Analysis object with extracted values
+            analysis_data = {
+                'metrics': result.get('metrics', {}),
+                'strategy': result.get('strategy', {}),
+                'trends': result.get('trends', {}),
+                'consumer_insights': result.get('consumer_insights', {}),
+                'tech_observations': result.get('tech_observations', {}),
+                'operations': result.get('operations', {}),
+                'outlook': result.get('outlook', {}),
+                'sentiment': sentiment,
+                'confidence': confidence
+            }
+            
             logger.info(f"Analysis completed for {company}")
-            return Analysis(**result)
+            return Analysis(**analysis_data)
         except CircuitBreakerOpenException as e:
             logger.warning(f"Circuit breaker open for Claude API: {e}")
-            return Analysis(metrics={}, strategy={}, trends={}, consumer_insights={}, tech_observations={}, operations={}, outlook={}, error="Claude API temporarily unavailable")
+            return self._fallback_analysis(transcript, company, "Claude API temporarily unavailable")
         except Exception as e:
             logger.error(f"Analysis failed for {company}: {e}")
-            return Analysis(metrics={}, strategy={}, trends={}, consumer_insights={}, tech_observations={}, operations={}, outlook={}, error=str(e))
+            return self._fallback_analysis(transcript, company, str(e))
+    
+    def _fallback_analysis(self, transcript: str, company: str, error: str) -> Analysis:
+        """Generate a fallback analysis when Claude API is unavailable."""
+        # Simple sentiment analysis based on keywords
+        positive_words = ['strong', 'growth', 'positive', 'improving', 'expanding', 'success', 'robust', 'excellent', 'outstanding']
+        negative_words = ['decline', 'negative', 'weak', 'struggling', 'challenging', 'difficult', 'poor', 'disappointing']
+        
+        text_lower = transcript.lower()
+        positive_count = sum(1 for word in positive_words if word in text_lower)
+        negative_count = sum(1 for word in negative_words if word in text_lower)
+        
+        # Calculate sentiment (-1 to 1)
+        if positive_count + negative_count == 0:
+            sentiment = 0.0
+        else:
+            sentiment = (positive_count - negative_count) / (positive_count + negative_count)
+        
+        # Calculate confidence (0 to 1)
+        confidence = min(0.8, (positive_count + negative_count) / 10.0)
+        
+        # Determine outlook based on sentiment
+        if sentiment > 0.2:
+            outlook_forecast = "bullish"
+        elif sentiment < -0.2:
+            outlook_forecast = "bearish"
+        else:
+            outlook_forecast = "neutral"
+        
+        # Determine strategy based on sentiment
+        if sentiment > 0.1:
+            growth = "positive"
+        elif sentiment < -0.1:
+            growth = "negative"
+        else:
+            growth = "neutral"
+        
+        return Analysis(
+            metrics={'sentiment': sentiment, 'confidence': confidence},
+            strategy={'growth': growth, 'market_share': 'stable'},
+            trends={'trend': 'stable', 'ecommerce': 'neutral', 'supply_chain': 'stable'},
+            consumer_insights={'preference': 'mixed'},
+            tech_observations={'automation': 'static'},
+            operations={'efficiency': 'medium'},
+            outlook={'forecast': outlook_forecast},
+            sentiment=sentiment,
+            confidence=confidence,
+            error=error
+        )
 
     def _make_claude_request(self, prompt: str, max_tokens: int):
         """Make a request to Claude API with retry logic."""

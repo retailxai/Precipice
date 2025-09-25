@@ -33,3 +33,9 @@ tasks:
     enabled: true
     description: |
       Clean up old data and run garbage collection to prevent memory leaks
+  - name: generate_daily_article
+    type: daily
+    time: "08:00"
+    enabled: true
+    description: |
+      Generate daily retail analysis article

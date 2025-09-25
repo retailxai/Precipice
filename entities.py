@@ -33,6 +33,8 @@ class Analysis:
     tech_observations: Dict
     operations: Dict
     outlook: Dict
+    sentiment: Optional[float] = None
+    confidence: Optional[float] = None
     error: Optional[str] = None
 
 

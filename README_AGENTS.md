@@ -1,3 +1,79 @@
+# RetailXAI Outputs Manual
+
+This guide shows where generated outputs live and how to export or publish them to Substack, X (Twitter), LinkedIn, and others.
+
+## Output locations
+
+- Articles (Markdown + JSON): `articles/`
+  - Example: `articles/{headline}_{timestamp}.md`
+  - Metadata JSON: `articles/{headline}_{timestamp}.json`
+- Logs: `logs/retailxai.log`
+- Static site (when exported): `frontend/out/`
+
+## How to export articles
+
+1) List latest articles
+```bash
+ls -1 articles | tail -20
+```
+
+2) View an article
+```bash
+less articles/Your_Headline_2025-09-13_004156.md | cat
+```
+
+3) Copy to clipboard (macOS)
+```bash
+pbcopy < articles/Your_Headline_2025-09-13_004156.md
+```
+
+## Publish to Substack
+
+- Manual: paste Markdown into Substack editor.
+- Automated (via email-to-Substack): set `SUBSTACK_EMAIL` and use `publish_api.py`.
+```bash
+python publish_api.py substack --file articles/Your_Headline_*.md --to "$SUBSTACK_EMAIL"
+```
+
+## Publish to X (Twitter)
+
+- Set env vars in `.env`: `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET`.
+- Use summary mode to keep under length.
+```bash
+python publish_api.py x --file articles/Your_Headline_*.md --mode summary
+```
+
+## Publish to LinkedIn
+
+- Set `LINKEDIN_API_KEY` and auth details.
+```bash
+python publish_api.py linkedin --file articles/Your_Headline_*.md --mode article
+```
+
+## Generate and export static site
+
+```bash
+cd frontend
+npm run build && npm run export
+open out/index.html
+```
+
+## Where to configure companies and sources
+
+- CLI helper:
+```bash
+python edit_companies_sources.py list-companies
+python edit_companies_sources.py list-sources
+python edit_companies_sources.py list-symbols
+```
+- Files: `config/companies.yaml`, `config/sources.json`, `config/config.yaml`
+
+## Troubleshooting
+
+- No articles: check logs `tail -f logs/retailxai.log`
+- Health: `GET /api/health/summary`, `/api/health/detailed`, `/api/health/sla`
+- Jobs: `GET /api/jobs` and `POST /api/jobs/{id}/retry`
+
 # RetailXAI Agent Framework
 
 This document describes the comprehensive agent framework added to RetailXAI, which extends data collection, processing, and publishing capabilities through a modular, scalable architecture.

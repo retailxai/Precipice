@@ -164,8 +164,14 @@ class ContentManager:
                     part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(filename)}")
                     msg.attach(part)
 
-            with smtplib.SMTP("smtp.gmail.com", 587) as server:
-                server.starttls()
+            # Use configurable SMTP settings for different email providers
+            smtp_server = self.substack_config.get("smtp_server", "smtp.gmail.com")
+            smtp_port = self.substack_config.get("smtp_port", 587)
+            use_tls = self.substack_config.get("use_tls", True)
+            
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                if use_tls:
+                    server.starttls()
                 server.login(self.substack_config["email_user"], self.substack_config["email_password"])
                 server.send_message(msg)
 

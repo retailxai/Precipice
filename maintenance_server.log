@@ -1,0 +1,21 @@
+🔧 Starting RetailXAI Maintenance Server
+======================================
+Maintenance mode is active
+Dashboard is offline for security updates
+
+Access URLs:
+  Maintenance Page: http://localhost:8001
+  Health Check: http://localhost:8001/api/health
+
+To stop maintenance mode:
+  ./disable_maintenance.sh
+
+Traceback (most recent call last):
+  File "/Users/jbriss/github-retailxai/Precipice-1/serve_maintenance.py", line 66, in <module>
+    with socketserver.TCPServer(("", PORT), MaintenanceHandler) as httpd:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/socketserver.py", line 456, in __init__
+    self.server_bind()
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/socketserver.py", line 472, in server_bind
+    self.socket.bind(self.server_address)
+OSError: [Errno 48] Address already in use

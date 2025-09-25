@@ -1,0 +1,179 @@
+name: Full-Stack RetailXAI Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+        - development
+
+jobs:
+  # Backend deployment
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+      
+      - name: Run tests
+        run: |
+          cd backend
+          python -m pytest
+      
+      - name: Build Docker image
+        run: |
+          docker build -t retailxai-backend:latest -f backend/Dockerfile .
+      
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /home/retailxai/precipice
+            git pull origin main
+            
+            # Update backend
+            cd backend
+            pip install -r requirements.txt
+            
+            # Run database migrations
+            alembic upgrade head
+            
+            # Restart backend services
+            systemctl restart retailxai.service
+            systemctl restart retailxai-worker.service || true
+            
+            echo "✅ Backend deployed successfully"
+
+  # Frontend deployment
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+      
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+          npm run export
+      
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: frontend-out
+          path: frontend/out
+
+  # Content and data pipeline deployment
+  content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy content to production
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /home/retailxai/precipice
+            git pull origin main
+            
+            # Update Python dependencies
+            pip install -r requirements.txt
+            
+            # Update configuration
+            cp config/*.yaml /home/retailxai/precipice/config/ || true
+            cp config/*.json /home/retailxai/precipice/config/ || true
+            
+            # Update systemd services
+            cp retailxai.service /etc/systemd/system/
+            systemctl daemon-reload
+            
+            # Restart all services
+            systemctl restart retailxai.service
+            systemctl restart retailxai-worker.service || true
+            systemctl restart retailxai-scheduler.service || true
+            
+            # Update YouTube CLI
+            chmod +x youtube-ai
+            chmod +x youtube_cli.py
+            chmod +x youtube-workflow.sh
+            
+            # Create output directories
+            mkdir -p articles transcripts analyses logs
+            
+            # Set proper permissions
+            chown -R retailxai:retailxai /home/retailxai/precipice
+            chmod -R 755 /home/retailxai/precipice
+            
+            echo "✅ Content pipeline deployed successfully"
+            echo "📊 Services status:"
+            systemctl status retailxai.service --no-pager -l
+
+  # Health check
+  health-check:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, content]
+    steps:
+      - name: Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            echo "🏥 Health Check"
+            echo "==============="
+            
+            # Check services
+            systemctl is-active retailxai.service
+            systemctl is-active retailxai-worker.service || echo "Worker service not found"
+            systemctl is-active retailxai-scheduler.service || echo "Scheduler service not found"
+            
+            # Check API health
+            curl -f http://localhost:8000/health || echo "API health check failed"
+            
+            # Check disk space
+            df -h /home/retailxai/precipice
+            
+            # Check recent logs
+            tail -n 20 /home/retailxai/precipice/logs/retailxai.log || echo "No logs found"
+            
+            echo "✅ Health check completed"
